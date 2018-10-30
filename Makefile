@@ -1,20 +1,22 @@
-CC=clang -mavx -O3
+CC=clang -static -mavx -O3
+AS=clang -S -mavx -O3
 
-TARGETS=ULONG_V0 ULONG_V1 ULONG_V2 M128_V0 M128_V1 M128_V1_2 M128_V1_3 M128_V2
-ASM=$(TARGETS:%=aes_counter_%.s)
-BIN=$(TARGETS:%=aes_counter_%)
-PERF=$(TARGETS:%=aes_counter_%.perf)
+TARGETS=ulong_v0 ulong_v1 ulong_v2 m128_v0 m128_v1 m128_v1_2 m128_v1_3 m128_v2
+SRC=$(addsuffix .c, $(TARGETS))
+ASM=$(SRC:.c=.s)
+PERF=$(SRC:.c=.perf)
 
-all: $(ASM) $(BIN) $(PERF)
+all: $(ASM) $(TARGETS) $(PERF)
 
-aes_counter_%.s: aes_counter.c
-	$(CC) -D$* $^ -S -o $@
+%.s: aes_counter.c %.c
+	$(CC) $*.c -S -o $@
 
-aes_counter_%: aes_counter.c
-	$(CC) -D$* $^ -o $@
+%: aes_counter.c %.c
+	$(CC) $^ -o $@
 
-aes_counter_%.perf: aes_counter_%
-	perf stat -o $@ -d ./$^
+%.perf: %
+	perf stat -o $@ -d ./$*
+	grep 'cycles:u' $@
 
 clean:
-	rm -f $(ASM) $(BIN) $(PERF)
+	rm -f $(ASM) $(TARGETS) $(PERF)
