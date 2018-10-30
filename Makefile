@@ -6,17 +6,17 @@ SRC=$(addsuffix .c, $(TARGETS))
 ASM=$(SRC:.c=.s)
 PERF=$(SRC:.c=.perf)
 
-all: summary
+all: $(ASM) summary
 
 %.s: aes_counter.c %.c
 	$(CC) $*.c -S -o $@
 
-%: aes_counter.c %.c
-	$(CC) $^ -o $@
-
-%.perf: %
+%.perf: $(TARGETS)
 	perf stat -o $@ -d ./$*
 	grep 'cycles:u' $@
+
+%:: aes_counter.c %.c
+	$(CC) $^ -o $@
 
 summary: $(PERF)
 	for file in ${PERF}; \
