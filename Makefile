@@ -18,5 +18,11 @@ all: $(ASM) $(TARGETS) $(PERF)
 	perf stat -o $@ -d ./$*
 	grep 'cycles:u' $@
 
+summary: $(PERF)
+	for file in ${PERF}; \
+	do \
+	  grep -H 'cycles:u' $$file; \
+	done
+
 clean:
 	rm -f $(ASM) $(TARGETS) $(PERF)
