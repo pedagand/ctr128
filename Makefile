@@ -16,5 +16,12 @@ aes_counter_%: aes_counter.c
 aes_counter_%.perf: aes_counter_%
 	perf stat -o $@ -d ./$^
 
+summary: $(PERF)
+	for file in ${PERF}; \
+	do \
+	  grep -H 'cycles:u' $$file; \
+	  grep -H 'instructions:u' $$file; \
+	done
+
 clean:
 	rm -f $(ASM) $(BIN) $(PERF)
