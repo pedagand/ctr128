@@ -1,4 +1,4 @@
-CC=clang -static -mavx -O3
+CC=clang -mavx -O3
 AS=clang -S -mavx -O3
 
 TARGETS=ulong_v0 ulong_v1 ulong_v2 m128_v0 m128_v1 m128_v1_2 m128_v1_3 m128_v2
