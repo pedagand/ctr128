@@ -22,6 +22,7 @@ summary: $(PERF)
 	for file in ${PERF}; \
 	do \
 	  grep -H 'cycles:u' $$file; \
+	  grep -H 'instructions:u' $$file; \
 	done
 
 clean:
