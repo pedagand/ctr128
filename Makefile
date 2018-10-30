@@ -6,7 +6,7 @@ SRC=$(addsuffix .c, $(TARGETS))
 ASM=$(SRC:.c=.s)
 PERF=$(SRC:.c=.perf)
 
-all: $(ASM) $(TARGETS) $(PERF)
+all: summary
 
 %.s: aes_counter.c %.c
 	$(CC) $*.c -S -o $@
