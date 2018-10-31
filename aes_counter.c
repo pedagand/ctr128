@@ -6,8 +6,7 @@
 #define unlikely(x)	(!__builtin_expect(!(x),1))
 #define likely(x) (__builtin_expect(!!(x),1))
 
-unsigned long const MAX_LOOP = (1ULL << 32) + 393;
-
+unsigned long MAX_LOOP;
 
 static void print_ulong(unsigned long counter[static 2]){
   printf("%016lx %016lx\n", counter[0], counter[1]);
@@ -344,7 +343,11 @@ __m128i bench__count_m128__v3(unsigned char n[static 16]){
 }
 
 
-int main(){
+int main(int argc, char *argv[]){
+  // assert(argc == 1);
+
+  MAX_LOOP = (1ULL << atoi(argv[1])) + 393;
+
   unsigned char n[16] = { 0x12, 0x23, 0x53, 0x32,
                           0x21, 0x32, 0x35, 0x23,
                           0xff, 0xff, 0xff, 0xff,
