@@ -25,6 +25,7 @@ static void print_input(__m128i input[static 8]){
 }
 
 static __m128i bench__count_ulong__v0(unsigned char n[static 16]){
+  // Reference implementation
 
   unsigned long counter[2] __attribute__ ((aligned (32)));
   memcpy(counter, n, 16);
@@ -57,6 +58,7 @@ static __m128i bench__count_ulong__v0(unsigned char n[static 16]){
 }
 
 static __m128i bench__count_ulong__v1(unsigned char n[static 16]){
+  // Identify fast-path
 
   unsigned long counter[2] __attribute__ ((aligned (32)));
   memcpy(counter, n, 16);
@@ -91,6 +93,7 @@ static __m128i bench__count_ulong__v1(unsigned char n[static 16]){
 }
 
 static __m128i bench__count_ulong__v2(unsigned char n[static 16]){
+  // Hacker's delight implem of two word's increment
 
   unsigned long counter[2] __attribute__ ((aligned (32)));
   memcpy(counter, n, 16);
@@ -122,6 +125,8 @@ static __m128i bench__count_ulong__v2(unsigned char n[static 16]){
 }
 
 static __m128i bench__count_m128__v0(unsigned char n[static 16]){
+  // Reference implementation on SSE registers
+
   __m128i one64ze64 = _mm_set_epi64x(-1, 0);
   __m128i test_vector = _mm_setr_epi32(0x1234, 0x2345, 0x3456, 0x4567);
 
@@ -154,6 +159,8 @@ static __m128i bench__count_m128__v0(unsigned char n[static 16]){
 }
 
 static __m128i bench__count_m128__v1(unsigned char n[static 16]){
+  // Identify fast-path
+
   __m128i one64ze64 = _mm_set_epi64x(-1, 0);
   __m128i test_vector = _mm_setr_epi32(0x1234, 0x2345, 0x3456, 0x4567);
 
@@ -191,6 +198,8 @@ static __m128i bench__count_m128__v1(unsigned char n[static 16]){
 }
 
 static __m128i bench__count_m128__v1_2(unsigned char n[static 16]){
+  // Reorder branches to put forward the fast-path
+
   __m128i one64ze64 = _mm_set_epi64x(-1, 0);
   __m128i test_vector = _mm_setr_epi32(0x1234, 0x2345, 0x3456, 0x4567);
 
@@ -228,6 +237,8 @@ static __m128i bench__count_m128__v1_2(unsigned char n[static 16]){
 }
 
 static __m128i bench__count_m128__v1_3(unsigned char n[static 16]){
+  // Reorder branches & clarify condition to put forward the fast-path
+
   __m128i one64ze64 = _mm_set_epi64x(-1, 0);
   __m128i test_vector = _mm_setr_epi32(0x1234, 0x2345, 0x3456, 0x4567);
 
@@ -265,7 +276,8 @@ static __m128i bench__count_m128__v1_3(unsigned char n[static 16]){
 }
 
 static __m128i bench__count_m128__v2(unsigned char n[static 16]){
-  //  3.15  insn per cycle
+  // Instruct clang of fast-path
+
   __m128i one64ze64 = _mm_set_epi64x(-1, 0);
   __m128i test_vector = _mm_setr_epi32(0x1234, 0x2345, 0x3456, 0x4567);
 
@@ -302,10 +314,18 @@ static __m128i bench__count_m128__v2(unsigned char n[static 16]){
   return test_vector;
 }
 
-__m128i bench__count_m128__v3(unsigned char n[static 16]){
-  // Function inlined by -O3
-  // Inlined code similar to __v2
-  // Non-inlined code similar to desired code (reasonable spilling pattern)
+static __m128i bench__count_m128__v2_1(unsigned char n[static 16]){
+  // Force shifts1 to be pre-computed out of the tight loop
+
+  volatile __m128i shifts1 = _mm_set_epi64x(1, 0);
+  __m128i shifts2 = _mm_set_epi64x(2, 0);
+  __m128i shifts3 = _mm_set_epi64x(3, 0);
+  __m128i shifts4 = _mm_set_epi64x(4, 0);
+  __m128i shifts5 = _mm_set_epi64x(5, 0);
+  __m128i shifts6 = _mm_set_epi64x(6, 0);
+  __m128i shifts7 = _mm_set_epi64x(7, 0);
+  __m128i shifts8 = _mm_set_epi64x(8, 0);
+
   __m128i one64ze64 = _mm_set_epi64x(-1, 0);
   __m128i test_vector = _mm_setr_epi32(0x1234, 0x2345, 0x3456, 0x4567);
 
@@ -327,10 +347,15 @@ __m128i bench__count_m128__v3(unsigned char n[static 16]){
         counter = _mm_sub_epi64(counter, overflow);
       }
     } else {
-      for (int j = 0; j < 8; j++) {
-        input[j] = _mm_shuffle_epi8(counter, mask);
-        counter = _mm_sub_epi64(counter, one64ze64);
-      }
+      input[0] = _mm_shuffle_epi8(counter, mask);
+      input[1] = _mm_shuffle_epi8(_mm_add_epi64(counter, shifts1), mask);
+      input[2] = _mm_shuffle_epi8(_mm_add_epi64(counter, shifts2), mask);
+      input[3] = _mm_shuffle_epi8(_mm_add_epi64(counter, shifts3), mask);
+      input[4] = _mm_shuffle_epi8(_mm_add_epi64(counter, shifts4), mask);
+      input[5] = _mm_shuffle_epi8(_mm_add_epi64(counter, shifts5), mask);
+      input[6] = _mm_shuffle_epi8(_mm_add_epi64(counter, shifts6), mask);
+      input[7] = _mm_shuffle_epi8(_mm_add_epi64(counter, shifts7), mask);
+      counter = _mm_add_epi64(counter, shifts8);
     }
 
     for (int j = 0; j < 8; j++){
@@ -341,12 +366,15 @@ __m128i bench__count_m128__v3(unsigned char n[static 16]){
 
   return test_vector;
 }
-
 
 int main(int argc, char *argv[]){
-  // assert(argc == 1);
 
-  MAX_LOOP = (1ULL << atoi(argv[1])) + 393;
+  int size = 32;
+  if (argc == 2){
+    size = atoi(argv[1]);
+  }
+
+  MAX_LOOP = (1ULL << size) + 393;
 
   unsigned char n[16] = { 0x12, 0x23, 0x53, 0x32,
                           0x21, 0x32, 0x35, 0x23,
@@ -387,8 +415,8 @@ int main(int argc, char *argv[]){
   out = bench__count_m128__v2(n);
 #endif
 
-#ifdef M128_V3
-  out = bench__count_m128__v3(n);
+#ifdef M128_V2_1
+  out = bench__count_m128__v2_1(n);
 #endif
 
   // for MAX_LOOP = (1ULL << 32) + 393;
