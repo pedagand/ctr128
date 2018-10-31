@@ -2,7 +2,11 @@
 
 extern __m128i bench__count(unsigned char n[static 16]);
 
-int main(){
+int main(int argc, char *argv[]){
+  // assert(argc == 1);
+
+  MAX_LOOP = (1ULL << atoi(argv[1])) + 393;
+
   unsigned char n[16] = { 0x12, 0x23, 0x53, 0x32,
                           0x21, 0x32, 0x35, 0x23,
                           0xff, 0xff, 0xff, 0xff,
