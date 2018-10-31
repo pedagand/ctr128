@@ -3,9 +3,12 @@
 extern __m128i bench__count(unsigned char n[static 16]);
 
 int main(int argc, char *argv[]){
-  // assert(argc == 1);
+  int size = 32;
+  if (argc == 2){
+    size = atoi(argv[1]);
+  }
 
-  MAX_LOOP = (1ULL << atoi(argv[1])) + 393;
+  MAX_LOOP = (1ULL << size) + 393;
 
   unsigned char n[16] = { 0x12, 0x23, 0x53, 0x32,
                           0x21, 0x32, 0x35, 0x23,
